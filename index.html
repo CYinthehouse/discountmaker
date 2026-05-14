@@ -395,6 +395,7 @@ h1 {
 const FUNCTION_URL  = 'https://createflashdiscount-lkipqrbc2a-uc.a.run.app';
 const PASSPHRASE    = 'flashsale-26s';            // must match FLASH_SECRET in Secret Manager
 const STORAGE_KEY   = 'klrn_flash_unlocked';      // localStorage key for "gate once" memory
+const ACTIVE_KEY    = 'klrn_flash_active';        // localStorage key for the active code
 // ───────────────────────────────────────────────────────────────
 
 let countdownInterval = null;
@@ -462,6 +463,8 @@ function startCountdown(expiresAt) {
     if (diff <= 0) {
       cd.textContent = 'EXPIRED';
       clearInterval(countdownInterval);
+      clearActiveCode();
+      document.getElementById('generateBtn').disabled = false;
       return;
     }
     const h = Math.floor(diff / 3600000);
@@ -471,6 +474,40 @@ function startCountdown(expiresAt) {
   };
   tick();
   countdownInterval = setInterval(tick, 1000);
+}
+
+function saveActiveCode(code, expiresAt) {
+  try {
+    localStorage.setItem(ACTIVE_KEY, JSON.stringify({ code, expiresAt }));
+  } catch(e) {}
+}
+
+function clearActiveCode() {
+  try { localStorage.removeItem(ACTIVE_KEY); } catch(e) {}
+}
+
+function restoreActiveCode() {
+  let saved = null;
+  try {
+    const raw = localStorage.getItem(ACTIVE_KEY);
+    if (raw) saved = JSON.parse(raw);
+  } catch(e) { return false; }
+  if (!saved || !saved.expiresAt) return false;
+
+  // If already expired, clear and bail
+  if (new Date(saved.expiresAt).getTime() <= Date.now()) {
+    clearActiveCode();
+    return false;
+  }
+
+  // Restore the visible result + lock out the generate button
+  document.getElementById('codeDisplay').textContent = saved.code;
+  document.getElementById('expiresAt').textContent =
+    'AT ' + new Date(saved.expiresAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  document.getElementById('result').classList.add('show');
+  startCountdown(saved.expiresAt);
+  document.getElementById('generateBtn').disabled = true;
+  return true;
 }
 
 async function generate() {
@@ -501,11 +538,16 @@ async function generate() {
     expEl.textContent = 'AT ' + new Date(data.expiresAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     document.getElementById('result').classList.add('show');
     startCountdown(data.expiresAt);
+    saveActiveCode(data.code, data.expiresAt);
 
     try { await navigator.clipboard.writeText(data.code); } catch(e) {}
     const lbl = document.getElementById('copiedLabel');
     lbl.classList.add('show');
     setTimeout(() => lbl.classList.remove('show'), 2500);
+
+    // Lock the button — only one active code at a time
+    btn.innerHTML = original;
+    return;
 
   } catch (err) {
     showError('Failed to generate: ' + err.message);
@@ -520,11 +562,14 @@ document.getElementById('passphrase').addEventListener('keydown', (e) => {
   if (e.key === 'Enter') unlock();
 });
 
-// Init: check if previously unlocked on this device
+// Init: check if previously unlocked on this device, and if there's a live code
 (function init() {
   let stored = null;
   try { stored = localStorage.getItem(STORAGE_KEY); } catch(e) {}
   setUnlockedUI(stored === '1');
+  if (stored === '1') {
+    restoreActiveCode();
+  }
 })();
 </script>
 </body>
