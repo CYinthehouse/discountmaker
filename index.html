@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flash Discount Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+  background-color: #0a1a2e;
+  background-image:
+    linear-gradient(rgba(65, 192, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(65, 192, 255, 0.08) 1px, transparent 1px);
+  background-size: 32px 32px;
+  background-position: -1px -1px;
+  min-height: 100vh;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.container {
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+}
+
+h1 {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 24px;
+  color: #ffd700;
+  margin-bottom: 16px;
+  text-shadow:
+    -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000,
+    -2px 0 0 #000, 2px 0 0 #000, 0 -2px 0 #000, 0 2px 0 #000,
+    4px 4px 0 #fff,
+    6px 6px 0 #000;
+  line-height: 1.5;
+}
+
+.subtitle {
+  font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  color: #fff48a;
+  margin-bottom: 24px;
+  line-height: 1.5;
+  letter-spacing: 0.5px;
+}
+
+/* Passphrase gate */
+.gate {
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  border: 2px solid #41c0ff;
+  border-radius: 14px;
+  padding: 18px 18px 16px;
+  margin-bottom: 24px;
+  max-width: 380px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.gate label {
+  display: block;
+  font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #fff;
+  letter-spacing: 0.3px;
+  text-align: left;
+}
+
+.gate input {
+  width: 100%;
+  padding: 12px 14px;
+  font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  background: #0a1f33;
+  border: 1px solid #2a6a8a;
+  border-radius: 8px;
+  color: #fff;
+  text-align: center;
+  outline: none;
+  letter-spacing: 0.5px;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.gate input::placeholder {
+  color: #b8d4e8;
+  opacity: 1;
+  font-weight: 500;
+}
+
+.gate input:focus {
+  border-color: #ffd700;
+  background: #0d2540;
+}
+
+.unlock-btn {
+  margin-top: 12px;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 14px;
+  color: #fff;
+  background: linear-gradient(180deg, #41c0ff 0%, #1a8fcc 50%, #0d6fa0 100%);
+  border: 2px solid #6dd4ff;
+  border-radius: 10px;
+  padding: 14px 24px;
+  cursor: pointer;
+  width: 100%;
+  transition: top 0.1s ease, box-shadow 0.1s ease;
+  box-shadow: 0 4px 0 #095a82, inset 0 1px 0 rgba(255,255,255,0.2);
+  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+  position: relative;
+  top: 0;
+  letter-spacing: 2px;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.unlock-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255, 255, 255, 0.35),
+    transparent
+  );
+  transition: left 0.65s ease-in-out;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.unlock-btn:hover::before { left: 100%; }
+.unlock-btn:hover { transform: none; }
+.unlock-btn:active { top: 2px; box-shadow: 0 2px 0 #095a82, inset 0 1px 0 rgba(255,255,255,0.1); }
+
+.unlocked-bar {
+  background: rgba(109, 255, 138, 0.1);
+  border: 2px solid #6dff8a;
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 24px;
+  font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: #6dff8a;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  letter-spacing: 0.3px;
+}
+.unlocked-bar a {
+  color: #41c0ff;
+  font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: underline;
+}
+.unlocked-bar a:hover { color: #ffd700; }
+
+/* Generate button */
+.generate-btn {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 14px;
+  color: #fff;
+  background: linear-gradient(180deg, #ff4455 0%, #cc1133 50%, #aa0022 100%);
+  border: 3px solid #ff6677;
+  border-radius: 14px;
+  padding: 24px 36px;
+  cursor: pointer;
+  width: 100%;
+  transition: top 0.1s ease, box-shadow 0.1s ease;
+  box-shadow:
+    0 6px 0 #880015,
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+  line-height: 1.5;
+  position: relative;
+  top: 0;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* Glint sweep on hover (btn-hover pattern) */
+.generate-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255, 255, 255, 0.35),
+    transparent
+  );
+  transition: left 0.65s ease-in-out;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.generate-btn:hover:not(:disabled)::before {
+  left: 100%;
+}
+
+.generate-btn:active:not(:disabled) {
+  top: 4px;
+  box-shadow:
+    0 2px 0 #880015,
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.generate-btn:disabled {
+  background: linear-gradient(180deg, #5a6470 0%, #3d4651 50%, #2a323b 100%);
+  border-color: #6a7480;
+  box-shadow:
+    0 6px 0 #1a1f26,
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  color: #c0c8d0;
+  cursor: not-allowed;
+}
+
+.generate-btn:disabled::before {
+  display: none;
+}
+
+/* Result box */
+.result {
+  margin-top: 28px;
+  display: none;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+.result.show { display: block; opacity: 1; transform: translateY(0); }
+
+.code-box {
+  background: rgba(0, 0, 0, 0.6);
+  border: 4px solid #ffd700;
+  border-radius: 16px;
+  padding: 30px 20px;
+  box-shadow:
+    0 0 40px rgba(255, 215, 0, 0.5),
+    inset 0 0 20px rgba(255, 215, 0, 0.1);
+  animation: pulse 2.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 40px rgba(255, 215, 0, 0.5), inset 0 0 20px rgba(255, 215, 0, 0.1); }
+  50%      { box-shadow: 0 0 60px rgba(255, 215, 0, 0.8), inset 0 0 30px rgba(255, 215, 0, 0.2); }
+}
+
+.code-label {
+  font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #41c0ff;
+  margin-bottom: 14px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.code {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 36px;
+  color: #ffd700;
+  letter-spacing: 4px;
+  text-shadow:
+    -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000,
+    0 0 20px rgba(255, 215, 0, 0.8);
+  margin: 8px 0 14px;
+  cursor: pointer;
+  user-select: all;
+}
+
+@media (max-width: 480px) { .code { font-size: 28px; letter-spacing: 3px; } h1 { font-size: 18px; } }
+
+.copied-label {
+  font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6dff8a;
+  margin-top: 12px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  letter-spacing: 0.5px;
+}
+.copied-label.show { opacity: 1; }
+
+.meta {
+  margin-top: 18px;
+  font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  line-height: 1.7;
+  letter-spacing: 0.5px;
+}
+
+.countdown {
+  font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: #ff4455;
+  margin-top: 6px;
+  letter-spacing: 1px;
+  font-variant-numeric: tabular-nums;
+}
+
+.error {
+  margin-top: 20px;
+  background: rgba(255, 68, 85, 0.15);
+  border: 2px solid #ff4455;
+  border-radius: 12px;
+  padding: 16px;
+  font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #ff8899;
+  line-height: 1.5;
+  display: none;
+  text-align: left;
+}
+.error.show { display: block; }
+
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>FLASH DISCOUNT</h1>
+  <p class="subtitle">Gives 71% off the Beginner Bundle for the next 2 hours only.</p>
+
+  <div class="gate" id="gate">
+    <label for="passphrase">🔒 Passphrase</label>
+    <input type="password" id="passphrase" placeholder="enter passphrase" autocomplete="off">
+    <button class="unlock-btn" id="unlockBtn" onclick="unlock()">UNLOCK</button>
+  </div>
+
+  <div class="unlocked-bar" id="unlockedBar" style="display:none;">
+    <span>🔓 UNLOCKED</span>
+    <a href="#" onclick="forget(); return false;">Forget passphrase</a>
+  </div>
+
+  <button class="generate-btn" id="generateBtn" onclick="generate()" disabled>
+    ⚡ GENERATE FLASH CODE ⚡
+  </button>
+
+  <div class="result" id="result">
+    <div class="code-box">
+      <div class="code-label">YOUR DISCOUNT CODE</div>
+      <div class="code" id="codeDisplay" onclick="copyCode()">———</div>
+      <div class="copied-label" id="copiedLabel">📋 COPIED TO CLIPBOARD!</div>
+    </div>
+    <div class="meta">
+      <div>⏰ EXPIRES IN</div>
+      <div class="countdown" id="countdown">2:00:00</div>
+      <div id="expiresAt" style="opacity: 0.7; margin-top: 8px;"></div>
+    </div>
+  </div>
+
+  <div class="error" id="error"></div>
+</div>
+
+<script>
+// ───────────────────────────────────────────────────────────────
+//  CONFIG — fill these in after deploying the Cloud Function
+// ───────────────────────────────────────────────────────────────
+const FUNCTION_URL  = 'https://createflashdiscount-lkipqrbc2a-uc.a.run.app';
+const PASSPHRASE    = 'flashsale-26s';            // must match FLASH_SECRET in Secret Manager
+const STORAGE_KEY   = 'klrn_flash_unlocked';      // localStorage key for "gate once" memory
+// ───────────────────────────────────────────────────────────────
+
+let countdownInterval = null;
+let isUnlocked = false;
+
+function showError(msg) {
+  const el = document.getElementById('error');
+  el.textContent = '⚠️ ' + msg;
+  el.classList.add('show');
+}
+
+function clearError() {
+  document.getElementById('error').classList.remove('show');
+}
+
+function setUnlockedUI(unlocked) {
+  isUnlocked = unlocked;
+  document.getElementById('gate').style.display = unlocked ? 'none' : 'block';
+  document.getElementById('unlockedBar').style.display = unlocked ? 'flex' : 'none';
+  document.getElementById('generateBtn').style.display = unlocked ? 'block' : 'none';
+  document.getElementById('generateBtn').disabled = !unlocked;
+}
+
+function unlock() {
+  clearError();
+  const entered = document.getElementById('passphrase').value.trim();
+  if (!entered) { showError('Enter the passphrase first.'); return; }
+  if (entered !== PASSPHRASE) { showError('Wrong passphrase.'); return; }
+
+  try { localStorage.setItem(STORAGE_KEY, '1'); } catch(e) {}
+  setUnlockedUI(true);
+  document.getElementById('passphrase').value = '';
+}
+
+function forget() {
+  try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
+  setUnlockedUI(false);
+  document.getElementById('result').classList.remove('show');
+  clearError();
+}
+
+async function copyCode() {
+  const code = document.getElementById('codeDisplay').textContent.trim();
+  if (!code || code === '———') return;
+  try {
+    await navigator.clipboard.writeText(code);
+    const lbl = document.getElementById('copiedLabel');
+    lbl.classList.add('show');
+    setTimeout(() => lbl.classList.remove('show'), 2000);
+  } catch (e) {
+    const range = document.createRange();
+    range.selectNode(document.getElementById('codeDisplay'));
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);
+  }
+}
+
+function startCountdown(expiresAt) {
+  if (countdownInterval) clearInterval(countdownInterval);
+  const end = new Date(expiresAt).getTime();
+  const tick = () => {
+    const now = Date.now();
+    const diff = end - now;
+    const cd = document.getElementById('countdown');
+    if (diff <= 0) {
+      cd.textContent = 'EXPIRED';
+      clearInterval(countdownInterval);
+      return;
+    }
+    const h = Math.floor(diff / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    const s = Math.floor((diff % 60000) / 1000);
+    cd.textContent = `${h}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+  };
+  tick();
+  countdownInterval = setInterval(tick, 1000);
+}
+
+async function generate() {
+  if (!isUnlocked) { showError('Unlock first.'); return; }
+  clearError();
+
+  const btn = document.getElementById('generateBtn');
+  const original = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> GENERATING...';
+
+  try {
+    const res = await fetch(FUNCTION_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-flash-secret': PASSPHRASE,
+      },
+      body: JSON.stringify({}),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.ok) {
+      throw new Error(data.error || `HTTP ${res.status}`);
+    }
+
+    document.getElementById('codeDisplay').textContent = data.code;
+    const expEl = document.getElementById('expiresAt');
+    expEl.textContent = 'AT ' + new Date(data.expiresAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    document.getElementById('result').classList.add('show');
+    startCountdown(data.expiresAt);
+
+    try { await navigator.clipboard.writeText(data.code); } catch(e) {}
+    const lbl = document.getElementById('copiedLabel');
+    lbl.classList.add('show');
+    setTimeout(() => lbl.classList.remove('show'), 2500);
+
+  } catch (err) {
+    showError('Failed to generate: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = original;
+  }
+}
+
+// Enter key on passphrase = unlock
+document.getElementById('passphrase').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') unlock();
+});
+
+// Init: check if previously unlocked on this device
+(function init() {
+  let stored = null;
+  try { stored = localStorage.getItem(STORAGE_KEY); } catch(e) {}
+  setUnlockedUI(stored === '1');
+})();
+</script>
+</body>
+</html>
